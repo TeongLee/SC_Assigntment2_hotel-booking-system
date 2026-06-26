@@ -1,0 +1,217 @@
+{
+  "info": {
+    "name": "Hotel Room Booking System — SECJ4383 Assignment 2",
+    "description": "Demonstrates the two REST web-service functionalities required by Step 3:\n\n1. Create a booking  — POST /api/bookings\n2. Search available rooms — GET /api/rooms/available\n\nIncludes happy paths plus the 409 / 400 / 404 edge cases. Start the app first with `mvnw spring-boot:run` (http://localhost:8080).\n\nDates are generated automatically (today + 10 / +13) by a collection pre-request script, so the requests always use valid future dates whenever you run them.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Generate valid future dates so the demo works on any day it is run.",
+          "const pad = (n) => String(n).padStart(2, '0');",
+          "const fmt = (d) => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());",
+          "const addDays = (n) => { const t = new Date(); t.setDate(t.getDate() + n); return fmt(t); };",
+          "pm.collectionVariables.set('checkIn', addDays(10));",
+          "pm.collectionVariables.set('checkOut', addDays(13));"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "checkIn", "value": "" },
+    { "key": "checkOut", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "1. List all rooms (confirm seed data)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/api/rooms", "host": ["{{baseUrl}}"], "path": ["api", "rooms"] },
+        "description": "Sanity check — should return the 5 seeded rooms."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200 OK', () => pm.response.to.have.status(200));",
+              "pm.test('returns an array of rooms', () => pm.expect(pm.response.json()).to.be.an('array'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. ★ Search available rooms (SHOWCASE — GET)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/rooms/available?checkIn={{checkIn}}&checkOut={{checkOut}}&type=SUITE",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "rooms", "available"],
+          "query": [
+            { "key": "checkIn", "value": "{{checkIn}}" },
+            { "key": "checkOut", "value": "{{checkOut}}" },
+            { "key": "type", "value": "SUITE" }
+          ]
+        },
+        "description": "Functionality #5 — search rooms free for the date range, filtered to SUITE."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200 OK', () => pm.response.to.have.status(200));",
+              "pm.test('room 201 (SUITE) is available before booking', () => {",
+              "  const free = pm.response.json().some(r => r.roomNumber === '201');",
+              "  pm.expect(free).to.be.true;",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. ★ Create a booking (SHOWCASE — POST, happy path)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"roomId\": 3,\n  \"guestName\": \"Aisha Rahman\",\n  \"guestEmail\": \"aisha@example.com\",\n  \"checkInDate\": \"{{checkIn}}\",\n  \"checkOutDate\": \"{{checkOut}}\"\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/api/bookings", "host": ["{{baseUrl}}"], "path": ["api", "bookings"] },
+        "description": "Functionality #1 — books room 3 (SUITE @ RM450). Expect 201 with totalPrice computed server-side (3 nights = RM1350.00)."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('201 Created', () => pm.response.to.have.status(201));",
+              "const b = pm.response.json();",
+              "pm.test('total price computed on the server', () => pm.expect(Number(b.totalPrice)).to.eql(1350));",
+              "pm.test('status is CONFIRMED', () => pm.expect(b.status).to.eql('CONFIRMED'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Edge case: double-booking → 409 Conflict",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"roomId\": 3,\n  \"guestName\": \"Bob Tan\",\n  \"guestEmail\": \"bob@example.com\",\n  \"checkInDate\": \"{{checkIn}}\",\n  \"checkOutDate\": \"{{checkOut}}\"\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/api/bookings", "host": ["{{baseUrl}}"], "path": ["api", "bookings"] },
+        "description": "Same room, same dates as request 3 — the no-double-booking rule rejects it with 409."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('409 Conflict', () => pm.response.to.have.status(409));",
+              "pm.test('error message explains the conflict', () => pm.expect(pm.response.json().message).to.include('already booked'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Edge case: checkOut before checkIn → 400 Bad Request",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"roomId\": 4,\n  \"guestName\": \"Bad Dates\",\n  \"guestEmail\": \"bad@example.com\",\n  \"checkInDate\": \"{{checkOut}}\",\n  \"checkOutDate\": \"{{checkIn}}\"\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/api/bookings", "host": ["{{baseUrl}}"], "path": ["api", "bookings"] },
+        "description": "Dates reversed — service-level guard rejects it with 400."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('400 Bad Request', () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Edge case: non-existent room → 404 Not Found",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"roomId\": 999,\n  \"guestName\": \"Ghost Guest\",\n  \"guestEmail\": \"ghost@example.com\",\n  \"checkInDate\": \"{{checkIn}}\",\n  \"checkOutDate\": \"{{checkOut}}\"\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/api/bookings", "host": ["{{baseUrl}}"], "path": ["api", "bookings"] },
+        "description": "Room 999 does not exist — returns 404."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('404 Not Found', () => pm.response.to.have.status(404));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. ★ Search again — booked room is now gone (proves the rule)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/rooms/available?checkIn={{checkIn}}&checkOut={{checkOut}}&type=SUITE",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "rooms", "available"],
+          "query": [
+            { "key": "checkIn", "value": "{{checkIn}}" },
+            { "key": "checkOut", "value": "{{checkOut}}" },
+            { "key": "type", "value": "SUITE" }
+          ]
+        },
+        "description": "After request 3 booked room 201 for these dates, it should no longer appear in the availability search — end-to-end proof of the overlap rule."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200 OK', () => pm.response.to.have.status(200));",
+              "pm.test('room 201 is no longer available', () => {",
+              "  const free = pm.response.json().some(r => r.roomNumber === '201');",
+              "  pm.expect(free).to.be.false;",
+              "});"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
