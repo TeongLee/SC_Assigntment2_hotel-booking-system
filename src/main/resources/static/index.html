@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cedar &amp; Clay · Mountain Lodge</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Top navigation -->
+    <header class="nav" id="nav">
+        <a class="brand" href="#top">
+            <span class="brand-mark">C&amp;C</span>
+            <span class="brand-name">Cedar &amp; Clay</span>
+        </a>
+        <nav class="nav-tabs">
+            <button class="tab active" data-tab="search">Stay</button>
+            <button class="tab" data-tab="rooms">Rooms</button>
+            <button class="tab" data-tab="bookings">Reservations</button>
+        </nav>
+    </header>
+
+    <!-- Hero with frosted search panel (signature element) -->
+    <section class="hero" id="top">
+        <div class="hero-media">
+            <img src="https://images.unsplash.com/photo-1501117716987-c8c394bb29df?auto=format&fit=crop&w=2000&q=80"
+                 alt="" onerror="this.style.display='none'">
+        </div>
+        <div class="hero-inner">
+            <p class="eyebrow">A boutique mountain retreat</p>
+            <h1 class="hero-title">Wake to woodsmoke<br>and quiet hills.</h1>
+            <p class="hero-sub">Five rooms, an old cedar porch, and nothing on the schedule
+                but the view. Choose your dates and settle in.</p>
+
+            <form id="search-form" class="search-panel" aria-label="Search available rooms">
+                <div class="field">
+                    <label for="search-checkin">Arrive</label>
+                    <input type="date" id="search-checkin" required>
+                </div>
+                <div class="field">
+                    <label for="search-checkout">Depart</label>
+                    <input type="date" id="search-checkout" required>
+                </div>
+                <div class="field">
+                    <label for="search-type">Room style</label>
+                    <select id="search-type">
+                        <option value="">Any style</option>
+                        <option value="SINGLE">Single</option>
+                        <option value="DOUBLE">Double</option>
+                        <option value="SUITE">Suite</option>
+                        <option value="DELUXE">Deluxe</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-primary">Find a room</button>
+            </form>
+        </div>
+    </section>
+
+    <main>
+        <!-- Stay / search results -->
+        <section id="search" class="panel active">
+            <div class="section-head">
+                <h2>Available rooms</h2>
+                <p class="section-note" id="search-note">Pick your dates above to see what's open.</p>
+            </div>
+            <div id="search-results" class="cards"></div>
+        </section>
+
+        <!-- All rooms -->
+        <section id="rooms" class="panel">
+            <div class="section-head">
+                <h2>Our rooms</h2>
+                <p class="section-note">Every room, with its nightly rate and current status.</p>
+            </div>
+            <div id="rooms-list" class="cards"></div>
+        </section>
+
+        <!-- Reservations -->
+        <section id="bookings" class="panel">
+            <div class="section-head">
+                <h2>Reservations</h2>
+                <p class="section-note">Review, adjust, or cancel a stay.</p>
+            </div>
+            <div id="bookings-list" class="cards"></div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <span class="brand-mark">C&amp;C</span>
+        <p>Cedar &amp; Clay Lodge · Open year-round · Reservations only</p>
+    </footer>
+
+    <!-- Booking modal (create / edit) -->
+    <div id="modal" class="modal-backdrop hidden">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+            <h3 id="modal-title">Reserve your stay</h3>
+            <p id="form-room-label" class="modal-room"></p>
+            <form id="booking-form">
+                <input type="hidden" id="form-booking-id">
+                <input type="hidden" id="form-room-id">
+                <div class="field">
+                    <label for="form-guest-name">Guest name</label>
+                    <input type="text" id="form-guest-name" required>
+                </div>
+                <div class="field">
+                    <label for="form-guest-email">Email</label>
+                    <input type="email" id="form-guest-email" required>
+                </div>
+                <div class="field-row">
+                    <div class="field">
+                        <label for="form-checkin">Arrive</label>
+                        <input type="date" id="form-checkin" required>
+                    </div>
+                    <div class="field">
+                        <label for="form-checkout">Depart</label>
+                        <input type="date" id="form-checkout" required>
+                    </div>
+                </div>
+                <div id="form-error" class="error hidden"></div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-ghost" id="modal-cancel">Never mind</button>
+                    <button type="submit" class="btn-primary" id="modal-submit">Confirm booking</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="toast" class="toast hidden"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>
