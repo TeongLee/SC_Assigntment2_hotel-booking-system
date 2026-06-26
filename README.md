@@ -12,17 +12,26 @@ is what lifts this above a flat CRUD app.
 
 ---
 
-## Features
+## The five functionalities
 
-| # | Functionality | Endpoint |
-|---|---------------|----------|
-| 1 | Create a booking | `POST /api/bookings` ★ |
-| 2 | List / retrieve bookings | `GET /api/bookings`, `GET /api/bookings/{id}` |
-| 3 | Update a booking | `PUT /api/bookings/{id}` |
-| 4 | Cancel / delete a booking | `DELETE /api/bookings/{id}` |
-| 5 | Search available rooms | `GET /api/rooms/available` ★ |
+As required by the assignment, the system implements **five distinct functionalities**,
+each backed by the full layered architecture (class → service → repository) and exposed
+as a RESTful web service:
 
-★ = the two showcase web-service endpoints required by the assignment.
+| # | Functionality | What it does | Endpoint |
+|---|---------------|--------------|----------|
+| 1 | **Create a booking** | Reserve a room for a date range — validates the room, dates, and availability, then computes the price server-side | `POST /api/bookings` ★ |
+| 2 | **Retrieve bookings** | List all bookings, or fetch a single booking by its ID | `GET /api/bookings`, `GET /api/bookings/{id}` |
+| 3 | **Update a booking** | Change a booking's guest details or dates, re-checking availability | `PUT /api/bookings/{id}` |
+| 4 | **Cancel / delete a booking** | Remove a booking, freeing the room's dates again | `DELETE /api/bookings/{id}` |
+| 5 | **Search available rooms** | Find rooms that are free for a given check-in/check-out range, optionally filtered by room type | `GET /api/rooms/available` ★ |
+
+★ = the two functionalities showcased as the required REST web-services
+(**Create booking** and **Search available rooms**). All five are fully exposed as REST
+endpoints returning JSON.
+
+> Supporting room management (`GET/POST/PUT/DELETE /api/rooms`) is also provided so the
+> five booking/search functionalities have data to operate on.
 
 ---
 
@@ -230,7 +239,9 @@ docs/             design blueprint + build guide
 
 ## Team
 
-| Member | Contribution |
-|--------|--------------|
-| _Add name_ | _Add contribution_ |
-| _Add name_ | _Add contribution_ |
+| Member | Responsibilities |
+|--------|------------------|
+| **Khoo Teong Lee** | Project setup & configuration (`pom.xml`, `application.properties`), domain model (`Room`, `Booking` entities + enums), repositories, and the `DataSeeder` |
+| **Loh Chee Huan** | Booking functionalities — `BookingService` (double-booking detection + server-side pricing) and `BookingController`: create, retrieve, update, and cancel bookings (functionalities 1–4) |
+| **Lim Bo Yuan** | Room & search functionality — `RoomService`, `RoomController`, the available-rooms search (functionality 5), and the `GlobalExceptionHandler` error handling |
+| **Lim Yu An** | Frontend web UI (Cedar & Clay), Postman test collection (happy paths + edge cases), and project documentation (README) |
