@@ -1,7 +1,6 @@
 package com.example.hotelbooking.repository;
 
 import com.example.hotelbooking.model.Booking;
-import com.example.hotelbooking.model.BookingStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -14,13 +13,6 @@ import java.util.List;
  * that drive double-booking detection and the availability search.
  */
 public interface BookingRepository extends JpaRepository<Booking, Long> {
-
-    /**
-     * All non-cancelled bookings for a room. BookingService can use this to apply
-     * the overlap predicate in Java, and the availability search uses it to decide
-     * whether a room is free for a requested range.
-     */
-    List<Booking> findByRoomIdAndStatusNot(Long roomId, BookingStatus status);
 
     /**
      * Active bookings for a room that overlap the requested [checkIn, checkOut) range.

@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Hotel Room Booking System — SECJ4383 Assignment 2",
-    "description": "Demonstrates the two REST web-service functionalities required by Step 3:\n\n1. Create a booking  — POST /api/bookings\n2. Search available rooms — GET /api/rooms/available\n\nIncludes happy paths plus the 409 / 400 / 404 edge cases. Start the app first with `mvnw spring-boot:run` (http://localhost:8080).\n\nDates are generated automatically (today + 10 / +13) by a collection pre-request script, so the requests always use valid future dates whenever you run them.",
+    "description": "Demonstrates the two REST web-service functionalities required by Step 3:\n\n1. Create a booking  — POST /api/bookings\n2. Search available rooms — GET /api/rooms/available\n\nIncludes happy paths plus the 409 / 400 / 404 edge cases, then walks the booking through its status lifecycle (check-in → check-out) and shows the 409 guard on an illegal cancel. Run the requests in order. Start the app first with `mvnw spring-boot:run` (http://localhost:8080).\n\nDates are generated automatically (today + 10 / +13) by a collection pre-request script, so the requests always use valid future dates whenever you run them.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "event": [
@@ -23,7 +23,8 @@
   "variable": [
     { "key": "baseUrl", "value": "http://localhost:8080" },
     { "key": "checkIn", "value": "" },
-    { "key": "checkOut", "value": "" }
+    { "key": "checkOut", "value": "" },
+    { "key": "bookingId", "value": "" }
   ],
   "item": [
     {
@@ -101,7 +102,9 @@
               "pm.test('201 Created', () => pm.response.to.have.status(201));",
               "const b = pm.response.json();",
               "pm.test('total price computed on the server', () => pm.expect(Number(b.totalPrice)).to.eql(1350));",
-              "pm.test('status is CONFIRMED', () => pm.expect(b.status).to.eql('CONFIRMED'));"
+              "pm.test('status is CONFIRMED', () => pm.expect(b.status).to.eql('CONFIRMED'));",
+              "// Remember this booking's id so the lifecycle requests (8-10) can act on it.",
+              "pm.collectionVariables.set('bookingId', b.id);"
             ]
           }
         }
@@ -208,6 +211,81 @@
               "  const free = pm.response.json().some(r => r.roomNumber === '201');",
               "  pm.expect(free).to.be.false;",
               "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "8. Lifecycle: check the guest in (CONFIRMED → CHECKED_IN)",
+      "request": {
+        "method": "PATCH",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/bookings/{{bookingId}}/check-in",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "bookings", "{{bookingId}}", "check-in"]
+        },
+        "description": "Moves the booking created in request 3 from CONFIRMED to CHECKED_IN."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200 OK', () => pm.response.to.have.status(200));",
+              "pm.test('status is CHECKED_IN', () => pm.expect(pm.response.json().status).to.eql('CHECKED_IN'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "9. Lifecycle: check the guest out (CHECKED_IN → CHECKED_OUT)",
+      "request": {
+        "method": "PATCH",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/bookings/{{bookingId}}/check-out",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "bookings", "{{bookingId}}", "check-out"]
+        },
+        "description": "Moves the same booking from CHECKED_IN to CHECKED_OUT."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200 OK', () => pm.response.to.have.status(200));",
+              "pm.test('status is CHECKED_OUT', () => pm.expect(pm.response.json().status).to.eql('CHECKED_OUT'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "10. Edge case: cancel a checked-out booking → 409 Conflict",
+      "request": {
+        "method": "PATCH",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/bookings/{{bookingId}}/cancel",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "bookings", "{{bookingId}}", "cancel"]
+        },
+        "description": "A completed (CHECKED_OUT) booking cannot be cancelled — the state-machine guard rejects the illegal transition with 409."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('409 Conflict', () => pm.response.to.have.status(409));",
+              "pm.test('error explains the illegal transition', () => pm.expect(pm.response.json().message).to.include('checked-out'));"
             ]
           }
         }

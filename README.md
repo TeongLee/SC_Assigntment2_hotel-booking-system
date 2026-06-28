@@ -125,7 +125,10 @@ The app starts on **http://localhost:8080**.
 | GET | `/api/bookings` | List all bookings | 200 | — |
 | GET | `/api/bookings/{id}` | Get one booking | 200 | 404 |
 | PUT | `/api/bookings/{id}` | Update a booking | 200 | 400, 404, 409 |
-| DELETE | `/api/bookings/{id}` | Cancel/delete a booking | 204 | 404 |
+| PATCH | `/api/bookings/{id}/check-in` | Check the guest in (CONFIRMED → CHECKED_IN) | 200 | 404, 409 |
+| PATCH | `/api/bookings/{id}/check-out` | Check the guest out (CHECKED_IN → CHECKED_OUT) | 200 | 404, 409 |
+| PATCH | `/api/bookings/{id}/cancel` | Soft-cancel a booking (→ CANCELLED), freeing its dates | 200 | 404, 409 |
+| DELETE | `/api/bookings/{id}` | Permanently delete a booking | 204 | 404 |
 
 ### Example — create a booking
 
@@ -154,6 +157,32 @@ curl -X POST http://localhost:8080/api/bookings \
   "totalPrice": 1350.00,
   "status": "CONFIRMED"
 }
+```
+
+---
+
+## Booking lifecycle
+
+A booking moves through a small state machine, driven by three `PATCH` endpoints:
+
+```
+CONFIRMED ──check-in──▶ CHECKED_IN ──check-out──▶ CHECKED_OUT
+    │                        │
+    └────────cancel──────────┴──▶ CANCELLED
+```
+
+- `PATCH /api/bookings/{id}/check-in` — only a `CONFIRMED` booking may be checked in.
+- `PATCH /api/bookings/{id}/check-out` — only a `CHECKED_IN` booking may be checked out.
+- `PATCH /api/bookings/{id}/cancel` — **soft cancel.** The record is kept but set to
+  `CANCELLED`, which the overlap check excludes — so the room's dates become bookable
+  again (business rule 5). A `CHECKED_OUT` or already-`CANCELLED` booking cannot be cancelled.
+
+Illegal transitions return **409 Conflict** with a clear message (e.g. checking out a
+booking that was never checked in). `DELETE`, by contrast, permanently removes the record;
+prefer `/cancel` when you want to free the dates while keeping the history.
+
+```bash
+curl -X PATCH http://localhost:8080/api/bookings/1/check-in
 ```
 
 ---
