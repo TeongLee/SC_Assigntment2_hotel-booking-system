@@ -314,6 +314,12 @@ main { max-width: 1080px; margin: 0 auto; padding: 56px 40px 40px; }
 .card-actions { display: flex; gap: 8px; margin-top: 16px; }
 .card-actions.center { justify-content: stretch; }
 .card-actions.center .btn-primary { width: 100%; text-align: center; }
+.status-note {
+    color: var(--sage);
+    font-size: 13px;
+    font-weight: 600;
+    padding: 8px 0;
+}
 
 /* ---------- Badges ---------- */
 .badge {

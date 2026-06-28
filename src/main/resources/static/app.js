@@ -297,38 +297,34 @@ function bookingCard(b) {
                     <span class="price-unit">total</span>
                 </div>
                 <div class="card-actions">
-                    <button class="btn-text btn-edit" onclick='resolveAndEdit(${editPayload(b)})'>Edit</button>
-                    <button class="btn-text btn-cancel" onclick="cancelBooking(${b.id})">Cancel</button>
+                    ${b.status === 'CANCELLED'
+                        ? '<span class="status-note">History kept</span>'
+                        : `<button class="btn-text btn-edit" onclick='resolveAndEdit(${editPayload(b)})'>Edit</button>
+                           ${b.status === 'CHECKED_OUT'
+                                ? ''
+                                : `<button class="btn-text btn-cancel" onclick="cancelBooking(${b.id})">Cancel</button>`}`}
                 </div>
             </div>
         </article>`;
 }
 
-// BookingResponse has no roomId; stash the fields and resolve the id on edit.
+// BookingResponse includes roomId so editing can send the exact room back to the API.
 function editPayload(b) {
     return JSON.stringify({
         id: b.id, roomNumber: b.roomNumber, roomType: b.roomType,
         guestName: b.guestName, guestEmail: b.guestEmail,
-        checkInDate: b.checkInDate, checkOutDate: b.checkOutDate, roomId: null,
+        checkInDate: b.checkInDate, checkOutDate: b.checkOutDate, roomId: b.roomId,
     });
 }
 
-// Resolve roomId (PUT needs it) by matching roomNumber, then open the edit form.
 window.resolveAndEdit = async function (b) {
-    if (b.roomId == null) {
-        try {
-            const rooms = await api('GET', '/api/rooms');
-            const match = rooms.find((r) => r.roomNumber === b.roomNumber);
-            b.roomId = match ? match.id : null;
-        } catch (_) { /* fall through; PUT will surface a clear error */ }
-    }
     fillEditForm(b);
 };
 
 window.cancelBooking = async function (id) {
     if (!confirm(`Cancel reservation #${id}?`)) return;
     try {
-        await api('DELETE', `/api/bookings/${id}`);
+        await api('PATCH', `/api/bookings/${id}/cancel`);
         toast(`Reservation #${id} cancelled`);
         loadBookings();
     } catch (e) {

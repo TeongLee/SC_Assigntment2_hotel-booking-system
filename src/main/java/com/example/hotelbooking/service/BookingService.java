@@ -221,6 +221,7 @@ public class BookingService {
         Room room = booking.getRoom();
         return new BookingResponse(
                 booking.getId(),
+                room.getId(),
                 room.getRoomNumber(),
                 room.getType(),
                 booking.getGuestName(),

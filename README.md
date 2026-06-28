@@ -23,7 +23,7 @@ as a RESTful web service:
 | 1 | **Create a booking** | Reserve a room for a date range — validates the room, dates, and availability, then computes the price server-side | `POST /api/bookings` ★ |
 | 2 | **Retrieve bookings** | List all bookings, or fetch a single booking by its ID | `GET /api/bookings`, `GET /api/bookings/{id}` |
 | 3 | **Update a booking** | Change a booking's guest details or dates, re-checking availability | `PUT /api/bookings/{id}` |
-| 4 | **Cancel / delete a booking** | Remove a booking, freeing the room's dates again | `DELETE /api/bookings/{id}` |
+| 4 | **Cancel / delete a booking** | Soft-cancel a booking, freeing the room's dates while keeping its history | `PATCH /api/bookings/{id}/cancel` |
 | 5 | **Search available rooms** | Find rooms that are free for a given check-in/check-out range, optionally filtered by room type | `GET /api/rooms/available` ★ |
 
 ★ = the two functionalities showcased as the required REST web-services
@@ -147,6 +147,7 @@ curl -X POST http://localhost:8080/api/bookings \
 ```json
 {
   "id": 3,
+  "roomId": 3,
   "roomNumber": "201",
   "roomType": "SUITE",
   "guestName": "Aisha Rahman",

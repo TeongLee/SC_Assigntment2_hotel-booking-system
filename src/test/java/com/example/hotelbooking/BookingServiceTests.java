@@ -60,6 +60,7 @@ class BookingServiceTests {
                 request(availableRoomId(), checkIn, checkIn.plusDays(3)));
 
         assertThat(booking.status()).isEqualTo(BookingStatus.CONFIRMED);
+        assertThat(booking.roomId()).isEqualTo(availableRoomId());
         assertThat(booking.nights()).isEqualTo(3);
         // 3 nights * RM450 = RM1350, computed on the server (never sent by the client).
         assertThat(booking.totalPrice()).isEqualByComparingTo(new BigDecimal("1350"));
