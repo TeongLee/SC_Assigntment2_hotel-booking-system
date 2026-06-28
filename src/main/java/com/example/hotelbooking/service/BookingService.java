@@ -98,6 +98,7 @@ public class BookingService {
      */
     public BookingResponse updateBooking(Long id, BookingRequest request) {
         Booking booking = findBookingOrThrow(id);
+        ensureUpdatable(booking);
         Room room = findRoomOrThrow(request.roomId());
         validateBookable(room, request.checkInDate(), request.checkOutDate());
         ensureNoOverlap(room.getId(), request.checkInDate(), request.checkOutDate(), id);
@@ -158,6 +159,15 @@ public class BookingService {
             throw new InvalidBookingStateException(
                     "Cannot " + action + " a booking in " + booking.getStatus()
                             + " state; it must be " + expected);
+        }
+    }
+
+    /** Finalized bookings are kept as history and must not be edited through PUT. */
+    private void ensureUpdatable(Booking booking) {
+        if (booking.getStatus() == BookingStatus.CANCELLED
+                || booking.getStatus() == BookingStatus.CHECKED_OUT) {
+            throw new InvalidBookingStateException(
+                    "Cannot update a booking in " + booking.getStatus() + " state");
         }
     }
 

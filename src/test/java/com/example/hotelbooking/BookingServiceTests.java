@@ -149,4 +149,33 @@ class BookingServiceTests {
         assertThatThrownBy(() -> bookingService.cancel(created.id()))
                 .isInstanceOf(InvalidBookingStateException.class);
     }
+
+    @Test
+    void update_cancelledBooking_isRejected() {
+        LocalDate checkIn = LocalDate.now().plusDays(100);
+        Long roomId = availableRoomId();
+        BookingResponse created = bookingService.createBooking(
+                request(roomId, checkIn, checkIn.plusDays(2)));
+        bookingService.cancel(created.id());
+
+        assertThatThrownBy(() ->
+                bookingService.updateBooking(created.id(), request(roomId, checkIn.plusDays(1), checkIn.plusDays(3))))
+                .isInstanceOf(InvalidBookingStateException.class)
+                .hasMessageContaining("Cannot update");
+    }
+
+    @Test
+    void update_checkedOutBooking_isRejected() {
+        LocalDate checkIn = LocalDate.now().plusDays(110);
+        Long roomId = availableRoomId();
+        BookingResponse created = bookingService.createBooking(
+                request(roomId, checkIn, checkIn.plusDays(2)));
+        bookingService.checkIn(created.id());
+        bookingService.checkOut(created.id());
+
+        assertThatThrownBy(() ->
+                bookingService.updateBooking(created.id(), request(roomId, checkIn.plusDays(1), checkIn.plusDays(3))))
+                .isInstanceOf(InvalidBookingStateException.class)
+                .hasMessageContaining("Cannot update");
+    }
 }
