@@ -14,6 +14,8 @@ import java.util.List;
  */
 public interface BookingRepository extends JpaRepository<Booking, Long> {
 
+    boolean existsByRoomId(Long roomId);
+
     /**
      * Active bookings for a room that overlap the requested [checkIn, checkOut) range.
      *

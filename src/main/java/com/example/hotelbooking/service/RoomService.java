@@ -2,6 +2,7 @@ package com.example.hotelbooking.service;
 
 import com.example.hotelbooking.dto.RoomRequest;
 import com.example.hotelbooking.dto.RoomResponse;
+import com.example.hotelbooking.exception.BookingConflictException;
 import com.example.hotelbooking.exception.ResourceNotFoundException;
 import com.example.hotelbooking.model.Room;
 import com.example.hotelbooking.model.RoomStatus;
@@ -59,6 +60,10 @@ public class RoomService {
 
     public void delete(Long id) {
         Room room = findRoomOrThrow(id);
+        if (bookingRepository.existsByRoomId(id)) {
+            throw new BookingConflictException(
+                    "Room " + room.getRoomNumber() + " cannot be deleted because it has bookings");
+        }
         roomRepository.delete(room);
     }
 
