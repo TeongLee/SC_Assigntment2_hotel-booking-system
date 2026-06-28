@@ -231,14 +231,54 @@ $('#booking-form').addEventListener('submit', async (e) => {
 
 async function loadBookings() {
     const box = $('#bookings-list');
+    const summaryBox = $('#booking-summary');
+    summaryBox.innerHTML = summaryLoading();
     box.innerHTML = '<p class="empty">Loading reservations…</p>';
     try {
-        const bookings = await api('GET', '/api/bookings');
+        const [summary, bookings] = await Promise.all([
+            api('GET', '/api/bookings/summary'),
+            api('GET', '/api/bookings'),
+        ]);
+        summaryBox.innerHTML = summaryCards(summary);
         if (!bookings.length) { box.innerHTML = '<p class="empty">No reservations yet. Find a room to get started.</p>'; return; }
         box.innerHTML = bookings.map(bookingCard).join('');
     } catch (e) {
+        summaryBox.innerHTML = '';
         box.innerHTML = `<p class="empty">Couldn't load reservations — ${escapeHtml(e.message)}</p>`;
     }
+}
+
+function summaryLoading() {
+    return `
+        <article class="summary-card muted">
+            <span class="summary-label">Summary</span>
+            <strong class="summary-value">Loading</strong>
+            <span class="summary-detail">Checking reservations</span>
+        </article>`;
+}
+
+function summaryCards(s) {
+    return `
+        <article class="summary-card featured">
+            <span class="summary-label">Total revenue</span>
+            <strong class="summary-value">${money(s.totalRevenue)}</strong>
+            <span class="summary-detail">Confirmed and active stays</span>
+        </article>
+        <article class="summary-card">
+            <span class="summary-label">Reservations</span>
+            <strong class="summary-value">${s.totalBookings}</strong>
+            <span class="summary-detail">${s.confirmedBookings} confirmed</span>
+        </article>
+        <article class="summary-card">
+            <span class="summary-label">Upcoming</span>
+            <strong class="summary-value">${s.upcomingBookings}</strong>
+            <span class="summary-detail">Arrivals from today onward</span>
+        </article>
+        <article class="summary-card">
+            <span class="summary-label">Completed</span>
+            <strong class="summary-value">${s.checkedOutBookings}</strong>
+            <span class="summary-detail">${s.cancelledBookings} cancelled</span>
+        </article>`;
 }
 
 function bookingCard(b) {

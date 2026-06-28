@@ -2,6 +2,7 @@ package com.example.hotelbooking.controller;
 
 import com.example.hotelbooking.dto.BookingRequest;
 import com.example.hotelbooking.dto.BookingResponse;
+import com.example.hotelbooking.dto.BookingSummaryResponse;
 import com.example.hotelbooking.service.BookingService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -42,6 +43,12 @@ public class BookingController {
     @GetMapping
     public List<BookingResponse> listAll() {
         return bookingService.listAll();
+    }
+
+    /** Bonus endpoint: aggregated booking counts and revenue. */
+    @GetMapping("/summary")
+    public BookingSummaryResponse getSummary() {
+        return bookingService.getSummary();
     }
 
     @GetMapping("/{id}")

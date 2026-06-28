@@ -225,6 +225,58 @@ main { max-width: 1080px; margin: 0 auto; padding: 56px 40px 40px; }
 .section-head h2 { font-size: 30px; letter-spacing: -0.01em; }
 .section-note { color: var(--sage); font-size: 15px; margin: 6px 0 0; font-weight: 500; }
 
+/* ---------- Booking summary ---------- */
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+    margin: -4px 0 28px;
+}
+.summary-card {
+    min-height: 126px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 18px;
+    border-radius: 18px;
+    background: #fffdf9;
+    border: 1px solid var(--line);
+    box-shadow: var(--shadow-sm);
+    animation: fade-up 0.5s ease both;
+}
+.summary-card.featured {
+    background: linear-gradient(135deg, var(--cacao), var(--clay-deep));
+    border-color: rgba(255, 255, 255, 0.24);
+}
+.summary-card.muted { opacity: 0.82; }
+.summary-label {
+    color: var(--sage);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+}
+.summary-value {
+    margin-top: 10px;
+    font-family: var(--display);
+    font-size: 30px;
+    line-height: 1;
+    font-weight: 600;
+    color: var(--cacao);
+}
+.summary-detail {
+    margin-top: 14px;
+    color: var(--sage);
+    font-size: 13px;
+    font-weight: 600;
+}
+.summary-card.featured .summary-label,
+.summary-card.featured .summary-value,
+.summary-card.featured .summary-detail {
+    color: var(--cream);
+}
+.summary-card.featured .summary-detail { opacity: 0.78; }
+
 /* ---------- Cards ---------- */
 .cards {
     display: grid;
@@ -363,5 +415,10 @@ main { max-width: 1080px; margin: 0 auto; padding: 56px 40px 40px; }
     .brand-name { display: none; }
     .hero { padding: 56px 20px 110px; }
     main { padding: 40px 20px; }
+    .summary-grid { grid-template-columns: 1fr; }
     .field-row { flex-direction: column; }
+}
+
+@media (min-width: 641px) and (max-width: 900px) {
+    .summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }

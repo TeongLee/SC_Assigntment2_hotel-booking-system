@@ -2,6 +2,7 @@ package com.example.hotelbooking.service;
 
 import com.example.hotelbooking.dto.BookingRequest;
 import com.example.hotelbooking.dto.BookingResponse;
+import com.example.hotelbooking.dto.BookingSummaryResponse;
 import com.example.hotelbooking.exception.BookingConflictException;
 import com.example.hotelbooking.exception.ResourceNotFoundException;
 import com.example.hotelbooking.model.Booking;
@@ -38,6 +39,34 @@ public class BookingService {
 
     public BookingResponse getById(Long id) {
         return toResponse(findBookingOrThrow(id));
+    }
+
+    public BookingSummaryResponse getSummary() {
+        List<Booking> bookings = bookingRepository.findAll();
+        LocalDate today = LocalDate.now();
+
+        long confirmed = countByStatus(bookings, BookingStatus.CONFIRMED);
+        long checkedIn = countByStatus(bookings, BookingStatus.CHECKED_IN);
+        long checkedOut = countByStatus(bookings, BookingStatus.CHECKED_OUT);
+        long cancelled = countByStatus(bookings, BookingStatus.CANCELLED);
+        long upcoming = bookings.stream()
+                .filter(booking -> booking.getStatus() != BookingStatus.CANCELLED)
+                .filter(booking -> !booking.getCheckInDate().isBefore(today))
+                .count();
+        BigDecimal revenue = bookings.stream()
+                .filter(booking -> booking.getStatus() != BookingStatus.CANCELLED)
+                .map(Booking::getTotalPrice)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        return new BookingSummaryResponse(
+                bookings.size(),
+                confirmed,
+                checkedIn,
+                checkedOut,
+                cancelled,
+                upcoming,
+                revenue
+        );
     }
 
     /**
@@ -124,6 +153,12 @@ public class BookingService {
     private BigDecimal computeTotal(Room room, LocalDate checkIn, LocalDate checkOut) {
         long nights = ChronoUnit.DAYS.between(checkIn, checkOut);
         return room.getPricePerNight().multiply(BigDecimal.valueOf(nights));
+    }
+
+    private long countByStatus(List<Booking> bookings, BookingStatus status) {
+        return bookings.stream()
+                .filter(booking -> booking.getStatus() == status)
+                .count();
     }
 
     private Room findRoomOrThrow(Long id) {
